@@ -1,0 +1,35 @@
+[workspace]
+members = [
+    ".",
+]
+
+[workspace.package]
+version = "0.0.3-dev"
+
+[workspace.dependencies]
+axum = "0.7.5"
+sqlx = { version = "0.7", features = [ "runtime-tokio" ] }
+tokio = { version = "1.38.0", features = ["full"] }
+serde = { version = "1.0.203", features = ["derive"] }
+chrono = "0.4.38"
+serde_json = "1.0.117"
+
+[package]
+name = "pet-store-rs"
+version.workspace = true
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = "1.0.86"
+axum.workspace = true
+chrono = { workspace = true, features = ["serde"] }
+serde.workspace = true
+serde_json.workspace = true
+sqlx = { workspace = true, features = ["chrono", "postgres", "sqlite"] }
+tokio.workspace = true
+tower = "0.4.13"
+tower-http = "0.5.2"
+tracing = { version = "0.1.40", features = ["async-await"] }
+uuid = "1.10.0"
