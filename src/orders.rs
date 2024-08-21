@@ -1,7 +1,6 @@
 use chrono::{DateTime, Utc};
 use pet::PetCategory;
 use pet::PetSize;
-use serde::de;
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 
@@ -56,11 +55,11 @@ mod service {
 }
 
 mod storage {
-    use std::{borrow::Borrow, sync::Arc};
+    use std::sync::Arc;
 
-    use axum::extract::Query;
+    
     use chrono::{DateTime, Utc};
-    use sqlx::{postgres::PgRow, prelude::FromRow, Connection, Database, Executor, Pool, Sqlite};
+    use sqlx::{prelude::FromRow, Executor};
 
     use crate::{persistence::Storage, AppState};
 
@@ -160,7 +159,7 @@ mod tests {
     mod storage {
         use std::sync::Arc;
 
-        use chrono::{DateTime, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Utc};
+        use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 
         use crate::{
             orders::{storage::OrderStorage, Order, OrderDetails, OrderStatus},

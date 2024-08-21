@@ -1,11 +1,9 @@
 use anyhow::Result;
-use std::{pin::Pin, sync::Arc, time::Duration};
-use tokio::sync::Mutex;
-use tracing::trace;
+use std::time::Duration;
 
 use sqlx::{
-    sqlite::{SqliteConnectOptions, SqlitePoolOptions},
-    ConnectOptions, Connection, Pool, Sqlite, SqliteConnection,
+    sqlite::SqlitePoolOptions,
+    ConnectOptions, Connection, Pool, Sqlite,
 };
 
 pub trait WithDBConnection {
