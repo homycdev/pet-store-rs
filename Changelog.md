@@ -1,3 +1,6 @@
+# VERSION 0.0.2
+- added github actions
+
 # VERSION 0.0.1
 - added local db and few query-funcs to work with it
 - added migration script
