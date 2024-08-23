@@ -1,17 +1,20 @@
 use std::sync::Arc;
 
 use anyhow::Result;
-use persistence::Storage;
+use config::AppConfig;
+use persistence::ArcPgPool;
 use persistence::StorageConfig;
+use persistence::StorageI;
 
-pub mod api;
+pub mod config;
 pub mod orders;
 pub mod persistence;
 pub mod pet;
 pub mod user;
+use persistence::Storage;
 
 pub struct AppStateInner {
-    pub db_pool: Arc<Storage>,
+    pub db: ArcPgPool,
 }
 
 struct AppState {
@@ -20,7 +23,7 @@ struct AppState {
 
 impl AppState {
     pub async fn shutdown(self) -> Result<()> {
-        self.inner.db_pool.close().await;
+        self.inner.db.close().await;
         Ok(())
     }
 }
@@ -30,22 +33,21 @@ async fn main() -> anyhow::Result<()> {
     println!("starting..");
     println!("connecting...");
 
+    let app_config = AppConfig::load_config()?;
     let storage_config = StorageConfig {
-        db_path: "sqlite::memory:".into(),
+        db_path: app_config.db(),
     };
 
-    let storage = Arc::new(Storage::open_migrate(storage_config).await?);
+    let storage = StorageI.conn(storage_config).await?;
+    StorageI.migrate(storage.pool.clone()).await?;
+
     let state = AppState {
-        inner: Arc::new(AppStateInner { db_pool: storage }),
+        inner: Arc::new(AppStateInner { db: storage.pool }),
     };
 
-    // let test = std::panic::catch_unwind(|| (1..10).product::<i8>()).is_err();
-    // println!("{}", test);
-
-    println!("connected to SQLite");
+    println!("connected to DB");
 
     println!("shutting down...");
     let _ = state.shutdown().await;
-    // storage.close();
     Ok(())
 }

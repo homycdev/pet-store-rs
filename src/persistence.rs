@@ -1,27 +1,35 @@
 use anyhow::Result;
 use std::time::Duration;
 
-use sqlx::{
-    sqlite::SqlitePoolOptions,
-    ConnectOptions, Connection, Pool, Sqlite,
-};
+use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 
-pub trait WithDBConnection {
-    type Conn;
-    fn conn() -> Self::Conn;
+pub struct StoragePg {
+    pub pool: ArcPgPool,
+}
+impl StoragePg {
+    pub async fn close(self) {
+        self.pool.close().await;
+    }
+}
+
+pub trait Storage {
+    type DB;
+    async fn conn(self, config: StorageConfig) -> Result<StoragePg>;
+    async fn migrate(self, pool: ArcPgPool) -> Result<()>;
+    async fn close(self, pool: ArcPgPool);
 }
 
 pub struct StorageConfig {
     pub db_path: String,
 }
 
-pub struct Storage {
-    pool: Pool<Sqlite>,
-}
+pub type ArcPgPool = Pool<Postgres>;
+pub struct StorageI;
+impl Storage for StorageI {
+    type DB = ArcPgPool;
 
-impl Storage {
-    pub async fn open_migrate(config: StorageConfig) -> Result<Storage> {
-        let pool = SqlitePoolOptions::new()
+    async fn conn(self, config: StorageConfig) -> Result<StoragePg> {
+        let pool = PgPoolOptions::new()
             .max_connections(5)
             .idle_timeout(None)
             .max_lifetime(None)
@@ -29,35 +37,35 @@ impl Storage {
             .connect(&config.db_path)
             .await?;
 
-        match sqlx::migrate!("./migrations").run(&pool).await {
-            Ok(_) => {
-                tracing::info!("Migrations passed successfully!");
-                println!("Migrations passed successfully!")
-            }
-            Err(e) => tracing::error!("Failed to migrate. Errors is : {:}", e),
-        };
-
-        Ok(Storage { pool })
+        Ok(StoragePg { pool })
     }
 
-    pub fn conn(&self) -> Pool<Sqlite> {
-        self.pool.clone()
+    async fn close(self, pool: ArcPgPool) {
+        pool.close().await
     }
 
-    pub async fn close(&self) {
-        self.pool.close().await
+    async fn migrate(self, pool: ArcPgPool) -> Result<()> {
+        sqlx::migrate!("./migrations").run(&pool.clone()).await?;
+        Ok(())
     }
 }
+
 #[cfg(test)]
 mod tests {
-    use crate::persistence::{Storage, StorageConfig};
+    use crate::{
+        config::AppConfig,
+        persistence::{Storage, StorageConfig, StorageI},
+    };
 
     #[tokio::test]
     async fn migration_test() -> anyhow::Result<()> {
-        let storage = Storage::open_migrate(StorageConfig {
-            db_path: "sqlite::memory:".into(),
-        })
-        .await;
+        let config = AppConfig::load_config()?;
+
+        let storage_conf = StorageConfig {
+            db_path: config.db(),
+        };
+        let storage = StorageI.conn(storage_conf).await?;
+        let storage = StorageI.migrate(storage.pool).await;
 
         assert!(storage.is_ok());
 

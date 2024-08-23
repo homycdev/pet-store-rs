@@ -1,0 +1,4 @@
+[db]
+url = "localhost/postgres"
+pwd = "test"
+user = "postgres"

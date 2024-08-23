@@ -25,6 +25,7 @@ edition = "2021"
 anyhow = "1.0.86"
 axum.workspace = true
 chrono = { workspace = true, features = ["serde"] }
+figment = { version = "0.10.19", features = ["toml"] }
 serde.workspace = true
 serde_json.workspace = true
 sqlx = { workspace = true, features = ["chrono", "postgres", "sqlite"] }
