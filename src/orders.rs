@@ -56,7 +56,6 @@ mod service {
 }
 
 mod storage {
-    
 
     use chrono::{DateTime, Utc};
     use sqlx::{FromRow, Postgres};
@@ -166,7 +165,8 @@ mod tests {
         use crate::{
             config::AppConfig,
             orders::{
-                storage::{OrderDB, OrderStorage}, OrderStatus,
+                storage::{OrderDB, OrderStorage},
+                OrderStatus,
             },
             persistence::{Storage, StorageConfig, StorageI},
         };
@@ -214,7 +214,7 @@ mod tests {
             orders_storage.create(test_order.clone()).await?;
             let get_res = orders_storage.get(1).await?;
 
-            assert_eq!((test_order.id) as i64, get_res.unwrap().id);
+            assert_eq!(test_order.id, get_res.unwrap().id);
             orders_storage.delete(1).await?;
 
             orders_storage.storage.close().await;
@@ -232,7 +232,7 @@ mod tests {
                 pet_id: 0,
                 user_id: 0,
                 quantity: 32,
-                ship_date: Some(NaiveDateTime::new(d.clone(), t.clone()).and_utc()),
+                ship_date: Some(NaiveDateTime::new(d, t).and_utc()),
                 status: OrderStatus::Approved,
             };
 
@@ -243,7 +243,7 @@ mod tests {
                     pet_id: 0,
                     user_id: 1,
                     quantity: 0,
-                    ship_date: Some(NaiveDateTime::new(d.clone(), t.clone()).and_utc()),
+                    ship_date: Some(NaiveDateTime::new(d, t).and_utc()),
                     status: OrderStatus::Cancelled,
                 })
                 .await?;
@@ -256,7 +256,7 @@ mod tests {
                     pet_id: 0,
                     user_id: 1,
                     quantity: 0,
-                    ship_date: Some(NaiveDateTime::new(d.clone(), t.clone()).and_utc()),
+                    ship_date: Some(NaiveDateTime::new(d, t).and_utc()),
                     status: OrderStatus::Cancelled,
                 }),
                 result
