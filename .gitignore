@@ -1,3 +1,5 @@
 /target
 .env
 .vscode
+.idea
+/src/kek.text
